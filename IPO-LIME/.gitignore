@@ -1,0 +1,4 @@
+data/
+!data/model
+.Rproj.user
+.Rhistory

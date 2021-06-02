@@ -1,0 +1,92 @@
+---
+title: "Práctica reconocimiento de emociones de la asignatura IPO del MUSI"
+output: html_notebook
+---
+
+# Análisis de un modelo de reconocimiento de emociones con la herramienta LIME
+
+## Introducción
+
+Se nos ha proporcionado una red neuronal entrenada 
+con un conjunto de caras que expresan las 6 emociones 
+básicas más la neutra. 
+
+Deseamos obtener una explicación de los elementos que componen las 
+imágenes que nos permita saber en que se fija 
+la red neuronal proporcionada para dirimir que emoción 
+se está expresando. 
+Es decir, queremos averigüar que partes de las caras 
+són las que más contribuyen en el dictamen que calcula la red. 
+
+## Metodología
+
+Suministraremos a la red entrenada una selección de caras 
+que expresarán algunas emociones de nuestro interés. 
+Por cada una de las caras suministradas, la red generará 
+un conjunto de probabilidades correspondientes a cada 
+una de las posibles emociones. 
+
+En cada caso, se usará la herramienta LIME 
+(Local Interpretable Model-Agnostic Explanations) 
+para conseguir el conjunto de explicaciones 
+que se consideren más ilustrativas. 
+Comentaremos los resultados. 
+
+## Requisitos
+
+Son necesarias las siguientes librerias o paquetes: 
+
+- r-gdata
+- caret
+- e1071
+
+## Antecedentes: el experimento en clase
+
+Durante una sesión práctica se encuestó a los alumnos 
+para saber cuan buenos reconocedores de emociones son. 
+En el siguiente apartado se muestra la matriz de confusión 
+de la prueba.
+
+### Matriz de confusión de las respuestas
+```{r}
+library(gdata)
+
+# Importamos el fichero CSV
+data <-read.csv("../data/class/Respuestas_emociones.csv", stringsAsFactors= FALSE)
+
+# Muestra la estructura interna del objeto
+str(data)
+
+# 'data.frame':880 obs. of  2 variables:
+#  $ actual   : chr"Anger" "Anger" "Anger" "Anger" ...
+#  $ predicted: chr"Anger" "Anger" "Fear" "Joy" ...
+
+library(caret)
+
+# creamos la matriz de confusión
+confusionMatrix(
+  # un factor de clases predichas
+  data = as.factor(data$predicted), 
+  # un factor de clases que se utilizará como resultados verdaderos
+  reference= as.factor(data$actual))
+```
+## Pruebas con la red neuronal
+
+En los siguientes apartados vamos a experimentar 
+con la red neuronal suministrada. 
+De las dos opciones que se nos han ofrecido, 
+hemos decidido usar la entrenada con las caras recortadas 
+por arrojar una precisión un poco mejor que la original. 
+
+### Carga de la red 
+
+### Conjunto de caras seleccionadas 
+
+#### Preparación de las caras 
+
+### Cara número 1 
+
+### Cara número 2 
+
+### Cara número 3 
+
