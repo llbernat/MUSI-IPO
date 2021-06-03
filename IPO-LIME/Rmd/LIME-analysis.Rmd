@@ -52,7 +52,7 @@ de la prueba.
 library(gdata)
 
 # Importamos el fichero CSV
-data <-read.csv("../data/class/Respuestas_emociones.csv", stringsAsFactors= FALSE)
+data <-read.csv("../data/csv/Respuestas_emociones.csv", stringsAsFactors= FALSE)
 
 # Muestra la estructura interna del objeto
 str(data)

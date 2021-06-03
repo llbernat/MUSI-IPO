@@ -1,4 +1,4 @@
-data/
-!data/model
+/data/test_crop/
+/data/train_crop/
 .Rproj.user
 .Rhistory
