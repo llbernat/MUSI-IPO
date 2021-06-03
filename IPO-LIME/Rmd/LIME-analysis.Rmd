@@ -36,7 +36,9 @@ Comentaremos los resultados.
 
 Son necesarias las siguientes librerias o paquetes: 
 
-- r-gdata
+- lattice
+- ggplot2
+- gdata
 - caret
 - e1071
 
@@ -49,6 +51,8 @@ de la prueba.
 
 ### Matriz de confusión de las respuestas
 ```{r}
+library(ggplot2)
+library(lattice)
 library(gdata)
 
 # Importamos el fichero CSV
