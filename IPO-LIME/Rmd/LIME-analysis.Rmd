@@ -16,47 +16,38 @@ imágenes que nos permita saber en que se fija
 la red neuronal proporcionada para dirimir que emoción 
 se está expresando. 
 Es decir, queremos averigüar que partes de las caras 
-són las que más contribuyen en el dictamen que calcula la red. 
-
-## Metodología
-
-Suministraremos a la red entrenada una selección de caras 
-que expresarán algunas emociones de nuestro interés. 
-Por cada una de las caras suministradas, la red generará 
-un conjunto de probabilidades correspondientes a cada 
-una de las posibles emociones. 
-
-En cada caso, se usará la herramienta LIME 
-(Local Interpretable Model-Agnostic Explanations) 
-para conseguir el conjunto de explicaciones 
-que se consideren más ilustrativas. 
-Comentaremos los resultados. 
+son las que más contribuyen en cada probabilidad que calcula la red. 
 
 ## Requisitos
 
-Son necesarias las siguientes librerias o paquetes: 
+Son necesarias las siguientes librerias y sus dependencias: 
 
+- keras
+- lime
+- abind
+- magick
 - lattice
 - ggplot2
 - gdata
 - caret
 - e1071
+- pillow (`pip install pillow`)
+- SciPy (`pip install SciPy`)
 
-## Antecedentes: el experimento en clase
+# Antecedentes: el experimento en clase
 
 Durante una sesión práctica se encuestó a los alumnos 
 para saber cuan buenos reconocedores de emociones son. 
 En el siguiente apartado se muestra la matriz de confusión 
-de la prueba.
+del resultado de la prueba.
 
-### Matriz de confusión de las respuestas
+## Matriz de confusión de las respuestas de la clase
+
 ```{r}
-library(ggplot2)
-library(lattice)
 library(gdata)
 
 # Importamos el fichero CSV
-data <-read.csv("../data/csv/Respuestas_emociones.csv", stringsAsFactors= FALSE)
+data = read.csv("../data/csv/Respuestas_emociones.csv", stringsAsFactors= FALSE)
 
 # Muestra la estructura interna del objeto
 str(data)
@@ -72,24 +63,194 @@ confusionMatrix(
   # un factor de clases predichas
   data = as.factor(data$predicted), 
   # un factor de clases que se utilizará como resultados verdaderos
-  reference= as.factor(data$actual))
+  reference = as.factor(data$actual)
+  )
 ```
-## Pruebas con la red neuronal
+
+## Conclusiones del resultado de la encuesta en clase
+
+La precisión arrojada es aproximadamente un 56%, creemos que esta 
+precisión tan baja puede ser debida a la falta de contexto, 
+pues se trata de imágenes no animadas y sin mayor información 
+que la puramente gráfica. 
+
+# Pruebas LIME con la red neuronal
 
 En los siguientes apartados vamos a experimentar 
 con la red neuronal suministrada. 
 De las dos opciones que se nos han ofrecido, 
-hemos decidido usar la entrenada con las caras recortadas 
+hemos decidido usar la entrenada con las *caras recortadas* 
 por arrojar una precisión un poco mejor que la original. 
 
-### Carga de la red 
+## Metodología
 
-### Conjunto de caras seleccionadas 
+Suministraremos a la red entrenada una selección de caras 
+del conjunto de pruebas 
+que expresarán algunas emociones de nuestro interés. 
+Por cada una de las caras suministradas, la red generará 
+un conjunto de probabilidades correspondientes a cada 
+una de las posibles emociones. 
 
-#### Preparación de las caras 
+En cada caso, se usará la herramienta LIME 
+(Local Interpretable Model-Agnostic Explanations) 
+para conseguir el conjunto de explicaciones 
+que se consideren más ilustrativas. 
+Comentaremos los resultados obtenidos, destacando 
+lo singular por encima de lo esperado. 
 
-### Cara número 1 
+## Carga de la red neuronal
 
-### Cara número 2 
+Vamos a cargar el modelo de red neuronal 
+ya entrenado con el *dataset* de caras recortadas. 
 
-### Cara número 3 
+```{r}
+library(keras)
+
+# Trayectoria de la serialización del modelo
+model_path = "../data/model/model7Emociones.h5"
+# Carga del modelo HDF5
+model <- load_model_hdf5(
+  model_path,
+  custom_objects= NULL,
+  compile = TRUE
+  )
+```
+
+## Preparación de las caras 
+
+```{r}
+# Trayectoria del conjunto de imágenes de test
+images_path = "../data/test_crop/"
+
+# Preparaciónde las imágenes: Imágenes normalizadas en escala de grises de tamaño 128x128
+## Genera lotes de imágenes con data aumentation en tiempo real 
+datagen <- image_data_generator(rescale= 1/255 # Normalización de las imágenes entre 0 y 1
+                                )
+## Genera lotes de imágenes a partir de un directorio 
+test_generator <- flow_images_from_directory(
+  directory = images_path, # Debe contener un subdirectorio por clase
+  generator = datagen, 
+  color_mode = "grayscale", # Las imágenes se convertirán para tener 1 canal de color
+  target_size = c(128, 128), # Las imágenes se redimensionarán a 128 x 128
+  class_mode= "categorical", # 2D one-hot encoded labels
+  batch_size=1, # Lotes formados por 1 imagen 
+  shuffle= FALSE # Sin aleatorización
+  )
+```
+
+## Evaluación de las predicciones
+
+```{r warning=FALSE}
+# Realización de las predicciones
+## Generación de predicciones a partir de un generador de datos
+STEP_SIZE = 
+  test_generator$n/test_generator$batch_size
+prediction <- model %>% predict_generator(
+  # Generador que produce lotes de imágenes
+  generator = test_generator, 
+  # Número total de pasos (lotes de imágenes) a proporcionar por el generador antes de detenerse
+  steps = STEP_SIZE)
+head(prediction)
+labels <- unlist(test_generator$class_indices)
+print(labels)
+```
+
+## Preparativos LIME 
+
+```{r}
+library(lime)
+library(abind)
+
+# Necesitamos pasa a LIME un ítem cualquiera del mismo tipo de los que le pediremos explicaciones. 
+# En nuestro caso le pasamos una imágen del conjunto de test
+sample_path = '../data/test_crop/ANGER/Alicia_EnragedCompressedLips.png'
+
+# Definimos la función que vamos a utilizar para preparar las imágenes para el modelo.
+
+# Transforma un vector de caracteres al formato que espera el modelo (imágenes normalizadas en escala de grises de tamaño 128x128): para cada imagen creamos un array unidimensional en row-major order con el número de canales al final y lo normalizamos entre 0 y 1
+img_preprocess <- function(x) {
+  arrays <- lapply(x, function(path) {
+    img <- image_load(path, grayscale=TRUE, target_size = c(128, 128))
+    x <- image_to_array(img, data_format = "channels_last")
+    x <- array_reshape(x, c(1, dim(x)))
+    x <- x/255.0
+    }
+    )
+  do.call(abind, c(arrays, list(along = 1)))
+}
+
+# Creamos un explicador con LIME a partir de nuestro modelo y con nuestras etiquetas
+explainer <- lime(
+  x = sample_path,
+  model = as_classifier(model, labels = names(labels)),
+  preprocess = img_preprocess
+  )
+
+```
+
+### Cara número 1: alegría
+
+Vamos a analizar una imágen con la etiqueta alegría 
+
+![Wanda, alegre ma non troppo](../data/test_crop/JOY/Wanda_IngratiatingSmile.png)
+
+```{r}
+explain_img_path = '../data/test_crop/JOY/Wanda_IngratiatingSmile.png'
+
+res <- predict(model, img_preprocess(explain_img_path))
+colnames(res) <- names(labels)
+print(res)
+```
+
+```{r}
+library(magick)
+n_superpixels = 20
+
+# Mostraremos los superpixels para poder evaluar cuáles son las zonas que se utilizan antes de aplicar la función de explicación.
+# Un superpixel és cada una de las zonas en las que se segmenta la imagen para facilitar las explicaciones en los modelos que utilizan imágenes.
+# Estos superpíxeles deberían contener patrones específicos de la imagen, por ello visualizarlos nos puede dar una idea de las zonas que se utilizan para la explicación.
+# Tenemos que tener en cuenta que si las características importantes de la imagen se cortan en demasiados segmentos podemos obtener un modelo incorrecto para la explicación.
+# Cuanto más grande sea el objeto que buscamos en relación al tamaño de la imagen, menos superpíxeles debería haber.
+plot_superpixels(explain_img_path, n_superpixels)
+```
+
+```{r}
+# Generación de la explicación
+explanation <- explain(
+  explain_img_path,
+  explainer,
+  n_labels = 2,
+  n_features = n_superpixels %/% 2, # limitamos el cardinal del conjunto de features para la explicación a la mitad de superpíxeles
+  n_superpixels = n_superpixels)
+# Visualización de los resultados
+plot_image_explanation(as.data.frame(explanation))
+```
+
+```{r}
+plot_image_explanation(as.data.frame(explanation),
+                       display = 'block', 
+                       show_negative = TRUE)
+```
+
+
+```{r}
+# Se puede precisar un poco más mostrando la gráfica de los pesos de las características para establecer un umbral (threshold) adecuado:
+library(ggplot2)
+explanation %>% 
+  ggplot(aes(x = feature_weight)) + 
+  facet_wrap(~ case, scales = "free") + 
+  geom_density()
+```
+
+```{r}
+plot_image_explanation(as.data.frame(explanation),
+                       display = 'block', 
+                       show_negative = TRUE,
+                       threshold = 0.20)
+```
+
+### Cara número 2: ??
+
+
+
+
