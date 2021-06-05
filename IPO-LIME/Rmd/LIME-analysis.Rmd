@@ -34,46 +34,6 @@ Son necesarias las siguientes librerias y sus dependencias:
 - pillow (`pip install pillow`)
 - SciPy (`pip install SciPy`)
 
-# Antecedentes: el experimento en clase
-
-Durante una sesión práctica se encuestó a los alumnos 
-para saber cuan buenos reconocedores de emociones son. 
-En el siguiente apartado se muestra la matriz de confusión 
-del resultado de la prueba.
-
-## Matriz de confusión de las respuestas de la clase
-
-```{r}
-library(gdata)
-
-# Importamos el fichero CSV
-data = read.csv("../data/csv/Respuestas_emociones.csv", stringsAsFactors= FALSE)
-
-# Muestra la estructura interna del objeto
-str(data)
-
-# 'data.frame':880 obs. of  2 variables:
-#  $ actual   : chr"Anger" "Anger" "Anger" "Anger" ...
-#  $ predicted: chr"Anger" "Anger" "Fear" "Joy" ...
-
-library(caret)
-
-# creamos la matriz de confusión
-confusionMatrix(
-  # un factor de clases predichas
-  data = as.factor(data$predicted), 
-  # un factor de clases que se utilizará como resultados verdaderos
-  reference = as.factor(data$actual)
-  )
-```
-
-## Conclusiones del resultado de la encuesta en clase
-
-La precisión arrojada es aproximadamente un 56%, creemos que esta 
-precisión tan baja puede ser debida a la falta de contexto, 
-pues se trata de imágenes no animadas y sin mayor información 
-que la puramente gráfica. 
-
 # Pruebas LIME con la red neuronal
 
 En los siguientes apartados vamos a experimentar 
@@ -170,7 +130,7 @@ sample_path = '../data/test_crop/ANGER/Alicia_EnragedCompressedLips.png'
 # Transforma un vector de caracteres al formato que espera el modelo (imágenes normalizadas en escala de grises de tamaño 128x128): para cada imagen creamos un array unidimensional en row-major order con el número de canales al final y lo normalizamos entre 0 y 1
 img_preprocess <- function(x) {
   arrays <- lapply(x, function(path) {
-    img <- image_load(path, grayscale=TRUE, target_size = c(128, 128))
+    img <- image_load(path, grayscale = TRUE, target_size = c(128, 128))
     x <- image_to_array(img, data_format = "channels_last")
     x <- array_reshape(x, c(1, dim(x)))
     x <- x/255.0
@@ -188,7 +148,7 @@ explainer <- lime(
 
 ```
 
-### Cara número 1: alegría
+## Cara número 1: alegría
 
 Vamos a analizar una imágen con la etiqueta alegría 
 
@@ -220,7 +180,7 @@ explanation <- explain(
   explain_img_path,
   explainer,
   n_labels = 2,
-  n_features = n_superpixels %/% 2, # limitamos el cardinal del conjunto de features para la explicación a la mitad de superpíxeles
+  n_features = 3 * n_superpixels %/% 4, #  limitamos el cardinal del conjunto de features para la explicación a 3/4 del número de superpíxeles
   n_superpixels = n_superpixels)
 # Visualización de los resultados
 plot_image_explanation(as.data.frame(explanation))
@@ -246,11 +206,218 @@ explanation %>%
 plot_image_explanation(as.data.frame(explanation),
                        display = 'block', 
                        show_negative = TRUE,
-                       threshold = 0.20)
+                       threshold = 0.06)
 ```
 
-### Cara número 2: ??
+### Conclusiones cara 1
+
+Hemos elegido este caso porque nos ha parecido una expresión que arrastraba una cierta
+melancolía y queríamos saber si la red neuronal lo clasificaría con probabilidades bajas. 
+
+Si bien parece que la red lo tiene medianamente claro, pues afirma con un 87% de seguridad 
+que Wanda está alegre en lugar de neutra (27%). 
+
+La puntuación de alegría se ve favorecida por la configuración de labios y barbilla 
+(como parecería lógico) 
+y extrañamente también por una parte importante del cuello. 
+En el caso presentado la nariz y el ojo izquierdo puntuan en contra. 
+Suponemos que es la forma que ha encontrado la red de darnos parte de razón en 
+que la expresión de alegría de Wanda podría ser más expresiva. 
+
+La valoración de expresión neutral se ve favorecida por los ojos 
+(seguimos pensando que melancólicos) y nariz. 
+Sin embargo el flequillo parece ir en contra. 
+
+## Cara número 2: sorpresa
+
+Vamos a analizar una imágen con la expresión de sorpresa. 
+
+![Simona, recibiendo la nueva factura de la luz](../data/test_crop/SURPRISE/Simona_Surprise.png)
+
+```{r}
+explain_img_path = '../data/test_crop/SURPRISE/Simona_Surprise.png'
+
+res <- predict(model, img_preprocess(explain_img_path))
+colnames(res) <- names(labels)
+print(res)
+```
+
+```{r}
+library(magick)
+n_superpixels = 40
+
+# Mostraremos los superpixels para poder evaluar cuáles son las zonas que se utilizan antes de aplicar la función de explicación.
+# Un superpixel és cada una de las zonas en las que se segmenta la imagen para facilitar las explicaciones en los modelos que utilizan imágenes.
+# Estos superpíxeles deberían contener patrones específicos de la imagen, por ello visualizarlos nos puede dar una idea de las zonas que se utilizan para la explicación.
+# Tenemos que tener en cuenta que si las características importantes de la imagen se cortan en demasiados segmentos podemos obtener un modelo incorrecto para la explicación.
+# Cuanto más grande sea el objeto que buscamos en relación al tamaño de la imagen, menos superpíxeles debería haber.
+plot_superpixels(explain_img_path, n_superpixels)
+```
+
+```{r}
+# Generación de la explicación
+explanation <- explain(
+  explain_img_path,
+  explainer,
+  n_labels = 2,
+  n_features = 3 * n_superpixels %/% 4, # limitamos el cardinal del conjunto de features para la explicación a 3/4 del número de superpíxeles
+  n_superpixels = n_superpixels)
+# Visualización de los resultados
+plot_image_explanation(as.data.frame(explanation))
+```
+
+```{r}
+plot_image_explanation(as.data.frame(explanation),
+                       display = 'block', 
+                       show_negative = TRUE)
+```
 
 
+```{r}
+# Se puede precisar un poco más mostrando la gráfica de los pesos de las características para establecer un umbral (threshold) adecuado:
+library(ggplot2)
+explanation %>% 
+  ggplot(aes(x = feature_weight)) + 
+  facet_wrap(~ case, scales = "free") + 
+  geom_density()
+```
 
+```{r}
+plot_image_explanation(as.data.frame(explanation),
+                       display = 'block', 
+                       show_negative = TRUE,
+                       threshold = 0.03)
+```
+
+### Conclusiones cara 2: sorpresa 
+
+En este caso, parece que para decidir sorpresa (77%) es suficiente fijarse 
+en la apertura de la boca. 
+Sin embargo la apreciación de miedo requiere revisar zonas como 
+la barbilla, una parte del labio, ojos, cejas y algo de frente. 
+
+Llama la atención que la red se fije principalmente en la abertura de la boca 
+para decidir sorpresa y en cambio considere casi toda la cara 
+para decidor miedo (con un 23% de probabilidad). 
+
+## Bonus: El grito (E. Munch)
+
+En este pequeño *bonus* hemos querido experimentar con una de las obras 
+maestras de la pintura nórdica expresionista. 
+Evidentemente el experimento (más bien un juego) 
+carece de rigor pues la red 
+no ha sido entrenada para reconocer emociones en esta tesitura. 
+
+Han podido más el interés por aprender y la curiosidad que la prudencia.
+
+![E. Munch, la cara más famosa del mundo](../data/munch/the_scream.png)
+
+```{r}
+explain_img_path = '../data/munch/the_scream.png'
+
+res <- predict(model, img_preprocess(explain_img_path))
+colnames(res) <- names(labels)
+print(res)
+```
+
+```{r}
+library(magick)
+n_superpixels = 46
+
+# Mostraremos los superpixels para poder evaluar cuáles son las zonas que se utilizan antes de aplicar la función de explicación.
+# Un superpixel és cada una de las zonas en las que se segmenta la imagen para facilitar las explicaciones en los modelos que utilizan imágenes.
+# Estos superpíxeles deberían contener patrones específicos de la imagen, por ello visualizarlos nos puede dar una idea de las zonas que se utilizan para la explicación.
+# Tenemos que tener en cuenta que si las características importantes de la imagen se cortan en demasiados segmentos podemos obtener un modelo incorrecto para la explicación.
+# Cuanto más grande sea el objeto que buscamos en relación al tamaño de la imagen, menos superpíxeles debería haber.
+plot_superpixels(explain_img_path, n_superpixels)
+```
+
+```{r}
+# Generación de la explicación
+explanation <- explain(
+  explain_img_path,
+  explainer,
+  n_labels = 2,
+  n_features = 3 * n_superpixels %/% 4, # limitamos el cardinal del conjunto de features para la explicación a 3/4 del número de superpíxeles
+  n_superpixels = n_superpixels)
+# Visualización de los resultados
+plot_image_explanation(as.data.frame(explanation))
+```
+
+```{r}
+plot_image_explanation(as.data.frame(explanation),
+                       display = 'block', 
+                       show_negative = TRUE)
+```
+
+
+```{r}
+# Se puede precisar un poco más mostrando la gráfica de los pesos de las características para establecer un umbral (threshold) adecuado:
+library(ggplot2)
+explanation %>% 
+  ggplot(aes(x = feature_weight)) + 
+  facet_wrap(~ case, scales = "free") + 
+  geom_density()
+```
+
+```{r}
+plot_image_explanation(as.data.frame(explanation),
+                       display = 'block', 
+                       show_negative = TRUE,
+                       threshold = 0.07)
+```
+
+### Conclusiones bonus
+
+En este caso lo que llama poderosamente la atención es que la red 
+esté segura al 98% de que el famoso cuadro de Munch es un grito de alegría, 
+lo cual sería toda una bomba informativa en los circulos de arte. 
+
+A parte de esto, poco tenemos que decir, pues se trata como ya hemos 
+mencionado de un juego más que un experiemto o valoración. 
+
+Esperamos que os haya gustado y divertido. 
+
+# Apéndice
+
+# Antecedentes: el experimento en clase
+
+Durante una sesión práctica se encuestó a los alumnos 
+para saber cuan buenos reconocedores de emociones son. 
+En el siguiente apartado se muestra la matriz de confusión 
+del resultado de la prueba.
+
+## Matriz de confusión de las respuestas de la clase
+
+```{r}
+library(gdata)
+
+# Importamos el fichero CSV
+data = read.csv("../data/csv/Respuestas_emociones.csv", stringsAsFactors= FALSE)
+
+# Muestra la estructura interna del objeto
+str(data)
+
+# 'data.frame':880 obs. of  2 variables:
+#  $ actual   : chr"Anger" "Anger" "Anger" "Anger" ...
+#  $ predicted: chr"Anger" "Anger" "Fear" "Joy" ...
+
+library(caret)
+
+# creamos la matriz de confusión
+confusionMatrix(
+  # un factor de clases predichas
+  data = as.factor(data$predicted), 
+  # un factor de clases que se utilizará como resultados verdaderos
+  reference = as.factor(data$actual)
+  )
+```
+
+## Conclusiones del resultado de la encuesta en clase
+
+La precisión arrojada es aproximadamente un 56%, creemos que esta 
+precisión tan baja para un humano puede ser debida a dos factores: 
+
+- falta de contexto, pues se trata de imágenes no animadas y sin mayor información que la puramente gráfica
+- falta de referencias, es decir, ninguna de las personas encuestadas conocía previamente las expresiones de los avatares expuestos
 
