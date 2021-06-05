@@ -78,6 +78,15 @@ model <- load_model_hdf5(
 
 ## Preparación de las caras 
 
+Además de cargar la red en el apartado anterior, 
+vamos a comprobar que todo funciona, 
+pasando por la red todas las caras de prueba y examinando 
+brevemente las probabilidades generadas. 
+
+Por tanto este apartado y el siguiente son opcionales, 
+aunque los hemos introducido para guardarlos como referencia 
+futura. 
+
 ```{r}
 # Trayectoria del conjunto de imágenes de test
 images_path = "../data/test_crop/"
@@ -123,7 +132,7 @@ library(abind)
 
 # Necesitamos pasa a LIME un ítem cualquiera del mismo tipo de los que le pediremos explicaciones. 
 # En nuestro caso le pasamos una imágen del conjunto de test
-sample_path = '../data/test_crop/ANGER/Alicia_EnragedCompressedLips.png'
+sample_path = '../data/test_crop/JOY/Wanda_IngratiatingSmile.png'
 
 # Definimos la función que vamos a utilizar para preparar las imágenes para el modelo.
 

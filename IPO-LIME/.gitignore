@@ -1,2 +1,10 @@
-/data/test_crop/
+/data/test_crop/ANGER/
+/data/test_crop/DISGUST/
+/data/test_crop/FEAR/
+/data/test_crop/JOY/*
+!/data/test_crop/JOY/Wanda_IngratiatingSmile.png
+/data/test_crop/NEUTRAL/
+/data/test_crop/SADNESS/
+/data/test_crop/SURPRISE/*
+!/data/test_crop/SURPRISE/Simona_Surprise.png
 /data/train_crop/
