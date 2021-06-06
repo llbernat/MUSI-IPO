@@ -1,6 +1,9 @@
 ---
 title: "Práctica reconocimiento de emociones de la asignatura IPO del MUSI"
-output: html_notebook
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 ---
 
 # Análisis de un modelo de reconocimiento de emociones con la herramienta LIME
@@ -223,8 +226,8 @@ plot_image_explanation(as.data.frame(explanation),
 Hemos elegido este caso porque nos ha parecido una expresión que arrastraba una cierta
 melancolía y queríamos saber si la red neuronal lo clasificaría con probabilidades bajas. 
 
-Si bien parece que la red lo tiene medianamente claro, pues afirma con un 87% de seguridad 
-que Wanda está alegre en lugar de neutra (27%). 
+Si bien parece que la red lo tiene medianamente claro, pues afirma con un 100% de probabilidad 
+que Wanda está alegre.  
 
 La puntuación de alegría se ve favorecida por la configuración de labios y barbilla 
 (como parecería lógico) 
@@ -421,12 +424,19 @@ confusionMatrix(
   reference = as.factor(data$actual)
   )
 ```
+Una representación más visual:
 
-## Conclusiones del resultado de la encuesta en clase
+![Distribución de las etiquetas asignadas a cada emoción (columnas suman 100%)](../data/percconfmatrix.JPG)
 
-La precisión arrojada es aproximadamente un 56%, creemos que esta 
-precisión tan baja para un humano puede ser debida a dos factores: 
 
-- falta de contexto, pues se trata de imágenes no animadas y sin mayor información que la puramente gráfica
-- falta de referencias, es decir, ninguna de las personas encuestadas conocía previamente las expresiones de los avatares expuestos
+## Observaciones del resultado de la encuesta en clase
+
+* El accuracy medio de los alumnos es aproximadamente un 56%, creemos que esta precisión tan baja para un humano puede ser debida a dos factores: 
+- 1) falta de contexto, pues se trata de imágenes no animadas y sin mayor información que la puramente gráfica
+- 1) Falta de referencias, es decir, ninguna de las personas encuestadas conocía previamente las expresiones de los avatares expuestos
+
+* Los alumnos son "conservadores" a la hora de identificar emociones. La etiqueta más puesta por los alumnos, con diferencia, es "Neutral" (209 asignaciones, seguida de "Sorpresa" con 175 asignaciones). Entendemos que los alumnos ponen esta etiqueta cuando no ven que la cara esté transmitiendo ninguna emoción. Sería interesante comprobar si el modelo, para aquellas emociones que los alumnos clasifican erróneamente como "Neutral", les asigna una emoción pero con una probabilidad más alejada del 100% (es decir, si las emociones en las que el modelo "duda" más, son las que los alumnos clasifican como neutral)
+
+* "Neutral", "Sorpresa" y "Alegría" son las emociones en las que más han acertado los alumnos (accuracy del 88%, 85% y 55%). Mientras que "Miedo", "Enfado" y "Disgusto" son en las que más hemos fallado. A lo mejor es cierto eso que dicen de que *millenials* y *Generación Z* nos hemos criado entre algodones, hasta el punto que no estamos familiarizados ni sabemos reonocer las emociones negativas.
+
 
