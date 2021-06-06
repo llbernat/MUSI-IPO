@@ -8,6 +8,11 @@ output:
 
 # Análisis de un modelo de reconocimiento de emociones con la herramienta LIME
 
+Autores: 
+
+- Ramón Rotaeche Fernández de la Riva
+- Lluís Bernat Ladaria
+
 ## Introducción
 
 Se nos ha proporcionado una red neuronal entrenada 
@@ -60,6 +65,10 @@ para conseguir el conjunto de explicaciones
 que se consideren más ilustrativas. 
 Comentaremos los resultados obtenidos, destacando 
 lo singular por encima de lo esperado. 
+
+También comentaremos los resultados de la encuesta 
+sobre discernimiento de emociones que se hizo a 
+los alumnos. 
 
 ## Carga de la red neuronal
 
@@ -232,7 +241,7 @@ que Wanda está alegre.
 La puntuación de alegría se ve favorecida por la configuración de labios y barbilla 
 (como parecería lógico) 
 y extrañamente también por una parte importante del cuello. 
-En el caso presentado la nariz y el ojo izquierdo puntuan en contra. 
+En el caso presentado la nariz y el ojo izquierdo puntúan en contra. 
 Suponemos que es la forma que ha encontrado la red de darnos parte de razón en 
 que la expresión de alegría de Wanda podría ser más expresiva. 
 
@@ -383,10 +392,10 @@ plot_image_explanation(as.data.frame(explanation),
 
 En este caso lo que llama poderosamente la atención es que la red 
 esté segura al 98% de que el famoso cuadro de Munch es un grito de alegría, 
-lo cual sería toda una bomba informativa en los circulos de arte. 
+lo cual sería toda una bomba informativa en los círculos de arte. 
 
 A parte de esto, poco tenemos que decir, pues se trata como ya hemos 
-mencionado de un juego más que un experiemto o valoración. 
+mencionado de un juego más que un experimento o valoración. 
 
 Esperamos que os haya gustado y divertido. 
 
@@ -433,10 +442,10 @@ Una representación más visual:
 
 * El accuracy medio de los alumnos es aproximadamente un 56%, creemos que esta precisión tan baja para un humano puede ser debida a dos factores: 
 - 1) falta de contexto, pues se trata de imágenes no animadas y sin mayor información que la puramente gráfica
-- 1) Falta de referencias, es decir, ninguna de las personas encuestadas conocía previamente las expresiones de los avatares expuestos
+- 2) Falta de referencias, es decir, ninguna de las personas encuestadas conocía previamente las expresiones de los avatares expuestos
 
 * Los alumnos son "conservadores" a la hora de identificar emociones. La etiqueta más puesta por los alumnos, con diferencia, es "Neutral" (209 asignaciones, seguida de "Sorpresa" con 175 asignaciones). Entendemos que los alumnos ponen esta etiqueta cuando no ven que la cara esté transmitiendo ninguna emoción. Sería interesante comprobar si el modelo, para aquellas emociones que los alumnos clasifican erróneamente como "Neutral", les asigna una emoción pero con una probabilidad más alejada del 100% (es decir, si las emociones en las que el modelo "duda" más, son las que los alumnos clasifican como neutral)
 
-* "Neutral", "Sorpresa" y "Alegría" son las emociones en las que más han acertado los alumnos (accuracy del 88%, 85% y 55%). Mientras que "Miedo", "Enfado" y "Disgusto" son en las que más hemos fallado. A lo mejor es cierto eso que dicen de que *millenials* y *Generación Z* nos hemos criado entre algodones, hasta el punto que no estamos familiarizados ni sabemos reonocer las emociones negativas.
+* "Neutral", "Sorpresa" y "Alegría" son las emociones en las que más han acertado los alumnos (accuracy del 88%, 85% y 55%). Mientras que "Miedo", "Enfado" y "Disgusto" son en las que más hemos fallado. A lo mejor es cierto eso que dicen de que *millenials* y *Generación Z* nos hemos criado entre algodones, hasta el punto que no estamos familiarizados ni sabemos reconocer las emociones negativas ;-).
 
 
