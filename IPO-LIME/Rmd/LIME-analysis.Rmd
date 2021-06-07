@@ -441,8 +441,8 @@ Una representación más visual:
 ## Observaciones del resultado de la encuesta en clase
 
 * El accuracy medio de los alumnos es aproximadamente un 56%, creemos que esta precisión tan baja para un humano puede ser debida a dos factores: 
-- 1) falta de contexto, pues se trata de imágenes no animadas y sin mayor información que la puramente gráfica
-- 2) Falta de referencias, es decir, ninguna de las personas encuestadas conocía previamente las expresiones de los avatares expuestos
+    1. falta de contexto, pues se trata de imágenes no animadas y sin mayor información que la puramente gráfica
+    2. Falta de referencias, es decir, ninguna de las personas encuestadas conocía previamente las expresiones de los avatares expuestos
 
 * Los alumnos son "conservadores" a la hora de identificar emociones. La etiqueta más puesta por los alumnos, con diferencia, es "Neutral" (209 asignaciones, seguida de "Sorpresa" con 175 asignaciones). Entendemos que los alumnos ponen esta etiqueta cuando no ven que la cara esté transmitiendo ninguna emoción. Sería interesante comprobar si el modelo, para aquellas emociones que los alumnos clasifican erróneamente como "Neutral", les asigna una emoción pero con una probabilidad más alejada del 100% (es decir, si las emociones en las que el modelo "duda" más, son las que los alumnos clasifican como neutral)
 
